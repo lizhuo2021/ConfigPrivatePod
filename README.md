@@ -1,8 +1,8 @@
-修改自[casatwy/ConfigPrivatePod](https://github.com/casatwy/ConfigPrivatePod)
+# ConfigPrivatePod
+本脚本修改自[casatwy/ConfigPrivatePod](https://github.com/casatwy/ConfigPrivatePod)
 
-需使用fastlne进行pod发版
+⚠️：需使用fastlne进行pod发版
 
-流程如下
 
 1. git clone git@github.com:Yunlou1995/ConfigPrivatePod.git
 2. 新建业务工程和category工程
@@ -17,4 +17,3 @@
 12. 执行faslane 
 
 关于步骤7、8、9请查看[在现有工程中实施基于CTMediator的组件化方案](https://casatwy.com/modulization_in_action.html)
-# ConfigPrivatePod
