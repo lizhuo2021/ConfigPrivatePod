@@ -1,0 +1,86 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+desc 'Release new pod version'
+lane :release_pod do |options|
+  # 输入repo name
+  target_repo    = options[:repo]
+  # 输入spec name
+  target_project = options[:specName]
+  # 输入版本号 tag
+  target_version = options[:tag]
+  # 输入描述
+  target_desc    = options[:desc]
+
+  spec_path      = "#{target_project}.podspec"
+
+  if target_project.nil? || target_project.empty? || target_version.nil? || target_version.empty?
+    UI.message("❌ Project name and version number are required parameters")
+    exit
+  end
+
+  UI.message("👉 Start release lib #{target_project} new version #{target_version}")
+  # 行为 
+  # git pull
+  # git_pull
+  # 如果不在特定的git分支上引发异常
+  # ensure_git_branch
+
+  # 2、pod install
+  cocoapods(
+	clean: true,
+	podfile: "./Podfile"
+  )
+
+  # 在podspec文件中增加或设置版本
+  version_bump_podspec(path: spec_path, version_number: target_version)
+  # git add
+  git_add(path: '.')
+  begin
+    if target_desc.nil? || target_desc.empty?
+      git_commit(path: '.', message: "release #{target_version}")
+    else
+      git_commit(path: '.', message: target_desc)
+    end
+  rescue
+    error_message = "#{$!}"
+    UI.message("⚠️ commit error:#{error_message}")
+    unless error_message.include?("nothing to commit, working directory clean")
+      exit
+    end
+    UI.message("The local code has committed, skip the commit step!")
+  end
+  # git push origin master
+  push_to_git_remote
+  if git_tag_exists(tag: target_version)
+      UI.message("Tag #{target_version} already exists, then, delete it! 💥")
+      remove_git_tag(tag: target_version)
+  end
+  # git add tag 
+  add_git_tag(tag: target_version)
+
+  # 将本地标签推送到远程 - 这只会推送标签
+  push_git_tags
+  # 检查
+  pod_lib_lint(allow_warnings: true)
+
+  if target_repo
+    pod_push(path: spec_path, repo: target_repo, allow_warnings: true)
+    UI.message("Release lib #{target_project} new version #{target_version} to repo #{target_repo} Successfully! 🎉 ")
+  else
+    pod_push(path: spec_path, allow_warnings: true)
+    UI.message("Release lib #{target_project} new version #{target_version} to CocoaPods/Specs Successfully! 🎉 ")
+  end
+end
